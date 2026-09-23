@@ -2,7 +2,7 @@
 
 **Problem Statement:** SIH26027 — Automatic Block Planning & Operational Optimization
 **Target Organization:** Ministry of Railways, Government of India
-**Team:** Team CodeSmiths — Smart India Hackathon 2026
+**Team:** Team TrackForce — Smart India Hackathon 2026
 
 This document is the single source of truth for RailSetu's architecture, design
 decisions, and current build status. It's written to be understood by a human
@@ -18,7 +18,7 @@ closure, even when their work is on the same stretch of track — multiplying
 train delays and leaving expensive maintenance machinery idle while sections
 wait for approval.
 
-RailFlow unifies these into **Joint Integrated Blocks**: one coordinated
+RailSetu unifies these into **Joint Integrated Blocks**: one coordinated
 closure instead of three, scheduled automatically around real train traffic,
 prioritized by predicted failure risk, and reviewed by a human controller
 before anything goes live.
@@ -401,7 +401,7 @@ interpolation is mathematically correct, not coincidental.
 │   ├── package.json
 │   └── README.md
 └── notebooks/ (or wherever Colab notebooks are kept)
-    └── railflow_risk_model.ipynb
+    └── railsetu_risk_model.ipynb
 ```
 
 ---
@@ -412,7 +412,7 @@ CP-SAT, XGBoost, and PyTorch are all widely-used, commodity tools — that's
 expected and fine. The actual differentiation is in **what problem they're
 pointed at and how they're combined**:
 1. **Joint-block bundling** — most systems solve one department's scheduling
-   in isolation; RailFlow's core contribution is recognizing and solving the
+   in isolation; RailSetu's core contribution is recognizing and solving the
    cross-department coordination problem.
 2. **The constraint model itself** — encoding real operational rules (safety
    headways, deteriorating maintenance time, crew limits) into CP-SAT is the

@@ -1,5 +1,5 @@
 /**
- * SchedulingPage.tsx — RailFlow Stages 4–9 UI
+ * SchedulingPage.tsx — RailSetu Stages 4–9 UI
  *
  * Sections:
  *  1. Train Runs panel (add/list) + Analyse Timetable button

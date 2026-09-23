@@ -1,7 +1,7 @@
 # RailSetu — Automatic Block Planning & Operational Optimization
 
 Smart India Hackathon 2026
-Ministry of Railways, Government of India — Team CodeSmiths
+Ministry of Railways, Government of India — Team TrackForce
 
 ## Overview
 
@@ -84,5 +84,5 @@ npm run dev                       # Dashboard on :5173
 
 ## Architecture
 
-See [RAILFLOW_ARCHITECTURE.md](RAILFLOW_ARCHITECTURE.md) for the complete
+See [RAILSETU_ARCHITECTURE.md](RAILSETU_ARCHITECTURE.md) for the complete
 system architecture, design decisions, and technical specifications.

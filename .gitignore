@@ -30,6 +30,8 @@ htmlcov/
 *.sqlite
 *.sqlite3
 backend/railflow.db
+backend/railsetu.db
+*.db
 
 # Logs & temporary files
 *.log
