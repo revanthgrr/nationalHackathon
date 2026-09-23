@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { ChatbotWidget } from './ChatbotWidget';
 
 export type AdminPage =
   | 'scheduling'
@@ -214,6 +215,9 @@ export function Layout({ currentPage, onNavigate, children }: Props) {
           </div>
         </main>
       </div>
+
+      {/* Floating AI Assistant Widget */}
+      <ChatbotWidget />
     </div>
   );
 }

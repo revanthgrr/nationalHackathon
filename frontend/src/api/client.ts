@@ -362,6 +362,13 @@ export function getMaintenanceTasks(status?: string): Promise<MaintenanceTaskRes
   return apiFetch<MaintenanceTaskResponse[]>(`/tasks${qs}`);
 }
 
+/** POST /tasks/auto-generate — auto-generate maintenance tasks from high-risk telemetry */
+export function autoGenerateTasks(minProbability: number = 0.65): Promise<MaintenanceTaskResponse[]> {
+  return apiFetch<MaintenanceTaskResponse[]>(`/tasks/auto-generate?min_probability=${minProbability}`, {
+    method: 'POST',
+  });
+}
+
 /** POST /schedule/optimize — run CP-SAT optimisation */
 export function postScheduleOptimize(req?: ScheduleOptimizeRequest): Promise<ScheduleOptimizeResponse> {
   return apiFetch<ScheduleOptimizeResponse>('/schedule/optimize', {

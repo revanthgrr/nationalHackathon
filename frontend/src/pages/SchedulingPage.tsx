@@ -26,6 +26,7 @@ import {
   postTimetableAnalyze,
   postTrainRun,
   resetScheduleData,
+  autoGenerateTasks,
 } from '../api/client';
 import type {
   DisruptionEventResponse,
@@ -133,6 +134,11 @@ export function SchedulingPage() {
   const [tkLoading,    setTkLoading]   = useState(false);
   const [tkError,      setTkError]     = useState<string | null>(null);
 
+  // ── Auto-generate from telemetry ─────────────────────────────────────────
+  const [autoGenLoading, setAutoGenLoading] = useState(false);
+  const [autoGenSuccess, setAutoGenSuccess] = useState<string | null>(null);
+  const [autoGenError,   setAutoGenError]   = useState<string | null>(null);
+
   // ── Schedule Optimize ────────────────────────────────────────────────────
   const [optResult,  setOptResult]  = useState<string | null>(null);
   const [optLoading, setOptLoading] = useState(false);
@@ -230,6 +236,25 @@ export function SchedulingPage() {
     } catch (err: unknown) {
       setTkError(err instanceof Error ? err.message : 'Failed to create task');
     } finally { setTkLoading(false); }
+  }
+
+  async function handleAutoGenerateTasks() {
+    setAutoGenLoading(true);
+    setAutoGenSuccess(null);
+    setAutoGenError(null);
+    try {
+      const res = await autoGenerateTasks(0.65);
+      if (res.length > 0) {
+        setAutoGenSuccess(`Generated ${res.length} maintenance demands from high-risk telemetry!`);
+      } else {
+        setAutoGenSuccess('High-risk telemetry sections already have active maintenance tasks queued.');
+      }
+      await loadTasks();
+    } catch (err: unknown) {
+      setAutoGenError(err instanceof Error ? err.message : 'Auto-generation failed');
+    } finally {
+      setAutoGenLoading(false);
+    }
   }
 
   async function handleOptimize() {
@@ -501,7 +526,25 @@ export function SchedulingPage() {
             <option value="executed">Executed</option>
           </select>
           <button onClick={loadTasks} className="text-xs text-blue-600 hover:underline">Refresh</button>
+
+          <button
+            id="btn-auto-gen-tasks"
+            onClick={handleAutoGenerateTasks}
+            disabled={autoGenLoading}
+            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-md text-xs font-semibold shadow-xs disabled:opacity-50 transition-colors"
+          >
+            <span>⚡</span>
+            <span>{autoGenLoading ? 'Generating…' : 'Auto-Generate Tasks from Risk Telemetry'}</span>
+          </button>
         </div>
+
+        {autoGenSuccess && (
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-800 font-medium flex items-center justify-between">
+            <span>✓ {autoGenSuccess}</span>
+            <button onClick={() => setAutoGenSuccess(null)} className="text-emerald-600 hover:text-emerald-900 font-bold ml-2">×</button>
+          </div>
+        )}
+        {autoGenError && <InlineAlert type="error" message={autoGenError} />}
 
         {tasks.length > 0 ? (
           <div className="overflow-x-auto">
@@ -531,11 +574,25 @@ export function SchedulingPage() {
             </table>
           </div>
         ) : (
-          <div className="text-center py-6 px-4 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1">
-            <p className="text-xs font-semibold text-slate-700">No Maintenance Tasks Found</p>
-            <p className="text-xs text-slate-400">
-              {taskFilter ? `No tasks found matching status "${taskFilter}".` : 'No maintenance demands are queued. Register a task above to schedule with CP-SAT.'}
-            </p>
+          <div className="text-center py-8 px-4 bg-slate-50 border border-slate-200/80 rounded-xl space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-800">No Maintenance Tasks Found</p>
+              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+                {taskFilter
+                  ? `No tasks found matching status "${taskFilter}".`
+                  : 'Register a task manually above, or automatically convert high-risk telemetry predictions into scheduled maintenance demands.'}
+              </p>
+            </div>
+            {!taskFilter && (
+              <button
+                onClick={handleAutoGenerateTasks}
+                disabled={autoGenLoading}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+              >
+                <span>⚡</span>
+                <span>Auto-Queue Demands from Ingested Telemetry</span>
+              </button>
+            )}
           </div>
         )}
       </section>

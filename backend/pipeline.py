@@ -29,13 +29,14 @@ import chainage as chainage_module
 from models import RawIngestionRecord, RiskPrediction
 from services.delay_service import predict_latest as delay_predict_latest
 from services.risk_service import extract_risk_features, predict_for_record
+from services.task_service import auto_generate_tasks_from_risk
 
 log = logging.getLogger("railsetu.pipeline")
 
 
 def run_full_pipeline(db: Session) -> dict:
     """
-    Run Stages 2 → 3a → 3b in sequence.
+    Run Stages 2 → 3a → 3b in sequence and auto-generate maintenance demands.
 
     Returns
     -------
@@ -45,6 +46,7 @@ def run_full_pipeline(db: Session) -> dict:
                      "skipped_ineligible": int, "failed": int,
                      "details": [...]},
         "delay":    {"ok": bool, ...run details or error details...},
+        "tasks_generated": int,
     }
     """
     result: dict = {
@@ -57,6 +59,7 @@ def run_full_pipeline(db: Session) -> dict:
             "details":            [],
         },
         "delay":    {},
+        "tasks_generated": 0,
     }
 
     # ── Stage 2 — Chainage ────────────────────────────────────────────────────
@@ -174,5 +177,14 @@ def run_full_pipeline(db: Session) -> dict:
         log.warning(
             "[Pipeline] Stage 3b incomplete: %s", delay_result.get("reason")
         )
+
+    # ── Stage 5 Auto-Feed — Queue Maintenance Tasks from High Risk Predictions ──
+    try:
+        new_tasks = auto_generate_tasks_from_risk(db, min_prob=0.65)
+        result["tasks_generated"] = len(new_tasks)
+        log.info("[Pipeline] Auto-queued %d maintenance tasks for CP-SAT scheduling", len(new_tasks))
+    except Exception as exc:
+        log.error("[Pipeline] Task auto-generation failed: %s", exc)
+        result["tasks_generated"] = 0
 
     return result

@@ -71,6 +71,7 @@ from models import (
 from pipeline import run_full_pipeline
 from services.delay_service import predict_latest as delay_predict_latest
 from services.risk_service import extract_risk_features, predict_for_record
+from services.task_service import auto_generate_tasks_from_risk
 from schemas import (
     BlockDecisionRequest,
     BundleRequest,
@@ -1089,6 +1090,24 @@ def list_tasks(
     return q.all()
 
 
+@app.post(
+    "/tasks/auto-generate",
+    response_model=list[MaintenanceTaskResponse],
+    summary="Auto-generate maintenance tasks from high-risk telemetry predictions",
+    tags=["Tasks"],
+)
+def auto_generate_tasks_endpoint(
+    db: DbDep,
+    min_probability: float = Query(default=0.65, ge=0.0, le=1.0),
+):
+    """
+    Scans risk_predictions for high/critical probability sections that do not yet
+    have a pending or active MaintenanceTask, and auto-queues MaintenanceTask rows.
+    """
+    tasks = auto_generate_tasks_from_risk(db, min_prob=min_probability)
+    return tasks
+
+
 # ---------------------------------------------------------------------------
 # Stage 5 — CP-SAT Scheduling
 # ---------------------------------------------------------------------------
@@ -1102,8 +1121,14 @@ def list_tasks(
 def optimize_schedule(body: ScheduleOptimizeRequest, db: DbDep):
     """
     Runs OR-Tools CP-SAT to assign pending maintenance tasks to available
-    maintenance windows. Returns HTTP 409 if no feasible schedule exists.
+    maintenance windows. If no pending tasks exist, automatically queues from high-risk telemetry.
+    Returns HTTP 409 if no feasible schedule exists.
     """
+    # Auto-feed: if no pending tasks exist, automatically queue from high-risk predictions
+    pending_count = db.query(MaintenanceTask).filter(MaintenanceTask.status == "pending").count()
+    if pending_count == 0:
+        auto_generate_tasks_from_risk(db)
+
     result = scheduler_module.optimize_schedule(
         db,
         safety_headway_minutes=body.safety_headway_minutes,
