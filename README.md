@@ -1,6 +1,6 @@
 # RailSetu — Automatic Block Planning & Operational Optimization
 
-Smart India Hackathon 2026 — SIH26027
+Smart India Hackathon 2026
 Ministry of Railways, Government of India — Team CodeSmiths
 
 ## Overview
