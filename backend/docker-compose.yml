@@ -1,0 +1,23 @@
+services:
+  db:
+    image: timescale/timescaledb:latest-pg16
+    container_name: railsetu_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: railflow
+      POSTGRES_PASSWORD: railflow
+      POSTGRES_DB: railflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - railsetu_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U railflow -d railflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  railsetu_pgdata:
+    name: railsetu_pgdata
